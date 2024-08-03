@@ -1,27 +1,35 @@
+import axios from 'axios';
+import React, {useEffect, useState} from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
+  Alert,
   FlatList,
   Image,
-  Pressable,
-  Alert,
   Modal,
+  Pressable,
+  Text,
+  View,
 } from 'react-native';
-import React, {useState, useEffect} from 'react';
-import axios from 'axios';
+import {useDispatch, useSelector} from 'react-redux';
+import {
+  decrementCart,
+  incrementCart,
+  setProducts,
+} from '../redux/productsReducer';
+import {RootState} from '../redux/store';
+import {styles} from './styles';
 
 export default function HomePage() {
-  const [products, setProducts] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
+  const products = useSelector((state: RootState) => state.products.products);
+  const dispatch = useDispatch();
 
   const fetchData = async () => {
     const url = 'https://fakestoreapi.com/products';
     try {
       let response = await axios.get(url);
       let data = response.data;
-      setProducts(data);
+      dispatch(setProducts(data));
     } catch (error) {
       console.error(error);
     }
@@ -41,8 +49,8 @@ export default function HomePage() {
             i <= rating
               ? require('../assets/star_filled.png')
               : i - rating === 0.5
-              ? require('../assets/star_half.png')
-              : require('../assets/star_empty.png')
+                ? require('../assets/star_half.png')
+                : require('../assets/star_empty.png')
           }
           style={{width: 20, height: 20}}
         />,
@@ -61,44 +69,38 @@ export default function HomePage() {
           Alert.alert('Modal has been closed.');
           setModalVisible(!modalVisible);
         }}>
-        <View
-          style={{
-            width: '100%',
-            flex: 2,
-            flexDirection: 'row',
-            backgroundColor: 'rgba(0,0,0,0.5)',
-            justifyContent: 'center',
-            alignItems: 'center',
-          }}>
-          <View
-            style={{
-              width: '80%',
-              backgroundColor: 'white',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: 20,
-              borderRadius: 10,
-            }}>
+        <View style={styles.modalBackground}>
+          <View style={styles.modal}>
             {selectedProduct && (
               <>
                 <Image
-                  style={{width: 200, height: 200, objectFit: 'contain'}}
+                  style={styles.modalImg}
                   source={{uri: selectedProduct.image}}
                 />
-                <Text style={{fontSize: 20, fontWeight: 'bold', marginTop: 10}}>
+                <Text style={[styles.price, {color: 'black'}]}>
                   Rs. {selectedProduct.price}
                 </Text>
-                <Text>{selectedProduct.description}</Text>
-                <View style={{flexDirection: 'row'}}>
+                <View style={styles.row}>
+                  <Text style={[styles.secondaryText, {marginRight: 10}]}>
+                    Description:
+                  </Text>
+                  <View style={{width: 200}}>
+                    <Text
+                      style={{
+                        color: 'black',
+                      }}>
+                      {selectedProduct.description}
+                    </Text>
+                  </View>
+                </View>
+                <View style={styles.row}>
                   <Pressable
-                    style={{
-                      backgroundColor: 'red',
-                      padding: 10,
-                      margin: 10,
-                      borderRadius: 5,
-                    }}
-                    onPress={() => setModalVisible(!modalVisible)}>
-                    <View style={{flexDirection: 'row'}}>
+                    style={styles.addCartBtn}
+                    onPress={() => {
+                      dispatch(incrementCart(selectedProduct.id));
+                      setModalVisible(!modalVisible);
+                    }}>
+                    <View style={styles.row}>
                       <Image
                         source={require('../assets/shopping_cart.png')}
                         style={{width: 20, height: 20}}
@@ -107,12 +109,7 @@ export default function HomePage() {
                     </View>
                   </Pressable>
                   <Pressable
-                    style={{
-                      backgroundColor: 'grey',
-                      padding: 10,
-                      margin: 10,
-                      borderRadius: 5,
-                    }}
+                    style={styles.modalDismissBtn}
                     onPress={() => setModalVisible(!modalVisible)}>
                     <Text style={{color: 'white'}}>Close</Text>
                   </Pressable>
@@ -130,32 +127,18 @@ export default function HomePage() {
               setSelectedProduct(item);
               setModalVisible(true);
             }}>
-            <View
-              style={{
-                flex: 1,
-                margin: 10,
-                padding: 10,
-                flexDirection: 'row',
-                borderColor: 'black',
-                borderRadius: 10,
-                borderWidth: 1,
-              }}>
+            <View style={styles.listTile}>
               <Image
                 style={{width: 80, height: 100, objectFit: 'contain'}}
                 source={{uri: item.image}}
               />
               <View style={{flex: 1, marginLeft: 20}}>
-                <Text
-                  style={{
-                    fontSize: 16,
-                    color: 'black',
-                    fontWeight: 'bold',
-                  }}>
+                <Text style={[styles.title, {color: 'black'}]}>
                   {item.title}
                 </Text>
                 <View style={{flexDirection: 'row'}}>
                   {renderStars(Math.round(item.rating.rate))}
-                  <Text style={{color: 'grey', marginLeft: 10}}>
+                  <Text style={[styles.secondaryText, {marginLeft: 10}]}>
                     {item.rating.count}
                   </Text>
                 </View>
@@ -164,36 +147,32 @@ export default function HomePage() {
                     flexDirection: 'row',
                     justifyContent: 'space-between',
                   }}>
-                  <Text
-                    style={{
-                      fontSize: 18,
-                      color: 'black',
-                      fontWeight: '700',
-                      marginVertical: 10,
-                    }}>
+                  <Text style={[styles.price, {color: 'black'}]}>
                     Rs. {item.price}
                   </Text>
-                  {/* <Pressable
-                    style={{
-                      // marginLeft: 10,
-                      backgroundColor: 'lightblue',
-                      padding: 5,
-                      height: 50,
-                      width: 50,
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      borderRadius: 5,
-                    }}
-                    onPress={() => {
-                      Alert.alert('Item added to cart');
-                    }}>
-                    <Image
-                      source={require('../assets/add_shopping_cart.png')}
-                      style={{width: 20, height: 20}}
-                    />
-                  </Pressable> */}
+                  {item.cart > 0 && (
+                    <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                      <Pressable
+                        style={[styles.actionBtn]}
+                        onPress={() => dispatch(decrementCart(item.id))}>
+                        <Text style={{fontSize: 20, color: 'black'}}>-</Text>
+                      </Pressable>
+                      <View style={{width: 30}}>
+                        <Text style={styles.cartText}>{item.cart}</Text>
+                      </View>
+                      <Pressable
+                        style={[styles.actionBtn]}
+                        onPress={() => dispatch(incrementCart(item.id))}>
+                        <View>
+                          <Text style={{fontSize: 20, color: 'black'}}>+</Text>
+                        </View>
+                      </Pressable>
+                    </View>
+                  )}
                 </View>
-                <Text style={{color: 'gray'}}>Category: {item.category}</Text>
+                <Text style={[styles.secondaryText]}>
+                  Category: {item.category}
+                </Text>
               </View>
             </View>
           </Pressable>
@@ -203,9 +182,3 @@ export default function HomePage() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-});

@@ -8,7 +8,7 @@ function App(): React.JSX.Element {
   return (
     <Provider store={store}>
       <SafeAreaView style={styles.home}>
-        <View style={styles.container}>
+        <View style={[styles.container]}>
           <Text style={styles.title}>Shopping</Text>
           <HomePage />
         </View>
